@@ -1,0 +1,21 @@
+%!PS
+
+(input) readlines
+
+[ exch
+    /acc 0 def
+    {
+        dup length 0 eq {
+            pop
+            acc
+            /acc 0 def
+        } {
+            cvi acc add /acc exch def
+        } ifelse
+    } forall
+    acc 0 ne {
+        acc
+    } if
+]
+
+listmax ==

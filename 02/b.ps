@@ -1,0 +1,77 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/strconcat % (a) (b) -> (ab)  
+{ exch dup length
+  2 index length add string
+  dup dup 4 2 roll copy length
+  4 -1 roll putinterval
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+} bind def
+
+/safestring {
+    dup length string cvs
+} bind def
+
+/strjoin % [(a) (b) (c)] (j) -> (ajbjc)
+{
+    3 dict begin
+    /j exch def
+    dup 0 get /out exch def
+    /first true def
+    {
+        first {
+            pop
+            /first false def
+        } {
+            out j strconcat
+            exch strconcat
+            /out exch def
+        } ifelse
+    } forall
+    out
+    end
+} bind def
+
+
+% end included library code
+
+/scoretab << (A) 1 (B) 2 (C) 3 (X) 1 (Y) 2 (Z) 3 >> def
+
+/scores 9 dict def
+
+[ (X) (Y) (Z) ] {
+    /state exch def
+    [ (A) (B) (C) ] {
+        /them exch def
+        scoretab state get 1 sub 3 mul
+        scoretab state get 1 add scoretab them get add 1 sub 3 mod 1 add add
+        scores exch [ them state ] ( ) strjoin exch put
+    } forall
+} forall
+
+/score 0 def
+
+(input) readlines {
+    scores exch get
+    score add /score exch def
+} forall
+
+score ==

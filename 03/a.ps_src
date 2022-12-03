@@ -1,0 +1,39 @@
+%!PS
+
+/priority 52 dict def
+/a (a) 0 get def
+/A (A) 0 get def
+1 1 26 {
+    dup
+    priority exch
+    dup a add 1 sub exch
+    put
+    priority exch
+    dup A add 1 sub exch
+    26 add
+    put
+} for
+
+/score 0 def
+
+(input) readlines {
+    dup length 2 idiv /l exch def
+    /i l dict def
+    /j l dict def
+    dup 0 l getinterval {
+        i exch true put
+    } forall
+    l l getinterval {
+        j exch true put
+    } forall
+    i keys {
+        dup
+        j exch known {
+            priority exch get score add /score exch def
+        } {
+            pop
+        } ifelse
+    } forall
+} forall
+
+score ==

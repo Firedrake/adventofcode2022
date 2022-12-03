@@ -1,0 +1,77 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/safestring {
+    dup length string cvs
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+} bind def
+
+/keys { % dict -> array of dict keys
+    [ exch
+      {
+          pop
+      } forall
+    ]
+} bind def
+
+
+% end included library code
+
+/priority 52 dict def
+/a (a) 0 get def
+/A (A) 0 get def
+1 1 26 {
+    dup
+    priority exch
+    dup a add 1 sub exch
+    put
+    priority exch
+    dup A add 1 sub exch
+    26 add
+    put
+} for
+
+/score 0 def
+/lx 0 def
+/i 0 dict def
+
+(input) readlines {
+    /p 0 dict def
+    {
+        p exch true put
+    } forall
+    lx 0 eq {
+        /i p def
+    } {
+        i keys {
+            dup p exch known not {
+                i exch undef
+            } {
+                pop
+            } ifelse
+        } forall
+    } ifelse
+    lx 2 eq {
+        i keys 0 get priority exch get score add /score exch def
+    } if
+    /lx lx 1 add 3 mod def
+} forall
+
+score ==

@@ -1,0 +1,18 @@
+%!PS
+
+/scoretab << (A) 1 (B) 2 (C) 3 (X) 1 (Y) 2 (Z) 3 >> def
+/gametab [ 3 6 0 ] def
+/score 0 def
+
+(input) readlines
+
+{
+    dup 0 1 getinterval scoretab exch get /them exch def
+    2 1 getinterval scoretab exch get /us exch def
+    us them sub 3 add 3 mod gametab exch get
+    us add
+    score add
+    /score exch def
+} forall
+
+score ==

@@ -1,0 +1,24 @@
+%!PS
+
+/scoretab << (A) 1 (B) 2 (C) 3 (X) 1 (Y) 2 (Z) 3 >> def
+
+/scores 9 dict def
+
+[ (X) (Y) (Z) ] {
+    /state exch def
+    [ (A) (B) (C) ] {
+        /them exch def
+        scoretab state get 1 sub 3 mul
+        scoretab state get 1 add scoretab them get add 1 sub 3 mod 1 add add
+        scores exch [ them state ] ( ) strjoin exch put
+    } forall
+} forall
+
+/score 0 def
+
+(input) readlines {
+    scores exch get
+    score add /score exch def
+} forall
+
+score ==

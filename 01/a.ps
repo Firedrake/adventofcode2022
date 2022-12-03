@@ -1,0 +1,63 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/safestring {
+    dup length string cvs
+} bind def
+
+/listmax {
+    { max } reduce
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+} bind def
+
+/reduce { % array proc -> value
+    2 dict begin
+    /p exch def
+    /a exch def
+    a 0 get
+    1 1 a length 1 sub {
+        a exch get
+        p
+    } for
+    end
+} bind def
+
+
+% end included library code
+
+(input) readlines
+
+[ exch
+    /acc 0 def
+    {
+        dup length 0 eq {
+            pop
+            acc
+            /acc 0 def
+        } {
+            cvi acc add /acc exch def
+        } ifelse
+    } forall
+    acc 0 ne {
+        acc
+    } if
+]
+
+listmax ==
