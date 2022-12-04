@@ -1,0 +1,47 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/safestring {
+    dup length string cvs
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+} bind def
+
+
+% end included library code
+
+/ct 0 def
+
+(input) readlines {
+    [ exch
+    (-) search pop cvi exch pop exch
+    (,) search pop cvi exch pop exch
+    (-) search pop cvi exch pop exch
+    cvi
+    ] /a exch def
+    a 0 get a 3 get le
+    a 1 get a 2 get ge and
+    a 0 get a 3 get ge
+    a 1 get a 2 get le and
+    or {
+        /ct ct 1 add def
+    } if
+} forall
+
+ct ==
