@@ -1,0 +1,199 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/strconcat % (a) (b) -> (ab)  
+{ exch dup length
+  2 index length add string
+  dup dup 4 2 roll copy length
+  4 -1 roll putinterval
+} bind def
+
+/safestring {
+    dup length string cvs
+} bind def
+
+
+/apop.right { % [a b c] -> [a b] c
+    [ exch aload length 1 add 1 roll ] exch
+} bind def
+
+/deepeq {
+    2 dict begin
+    /a exch def
+    /b exch def
+    a type b type eq {
+        a type /dicttype eq {
+            a length b length eq {
+                <<
+                    a {
+                        pop
+                        true
+                    } forall
+                    b {
+                        pop
+                        true
+                    } forall
+                >>
+                true exch
+                {
+                    pop
+                    dup a exch known {
+                        dup b exch known {
+                            dup a exch get exch b exch get deepeq not {
+                                pop false
+                            } if
+                        } {
+                            false
+                        } ifelse
+                    } {
+                        false
+                    } ifelse
+                } forall
+            } {
+                false
+            } ifelse
+        } {
+            a type dup /arraytype eq exch /stringtype eq or {
+                a length b length eq {
+                    true
+                    0 1 a length 1 sub {
+                        dup a exch get exch b exch get deepeq not {
+                            pop false
+                            exit
+                        } if
+                    } for
+                } {
+                    false
+                } ifelse
+            } {
+                a b eq
+            } ifelse
+        } ifelse
+    } {
+        false
+    } ifelse
+    end
+} bind def
+
+/apush.right { % [a b] c -> [a b c]
+    exch
+    [ exch aload length 2 add -1 roll ]
+} bind def
+
+/strsplit % (ajbjc) (j) -> [ (a) (b) (c) ]
+{
+    1 dict begin
+    /sep exch def
+    [ exch
+      {
+          dup length 0 eq {
+              pop
+              exit
+          } {
+              sep search {
+                  exch pop
+                  dup length 0 eq {
+                      pop
+                  } {
+                      exch
+                  } ifelse
+              } {
+                  ()
+              } ifelse
+          } ifelse
+      } loop
+    ]
+    end
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+} bind def
+
+/strjoin % [(a) (b) (c)] (j) -> (ajbjc)
+{
+    3 dict begin
+    /j exch def
+    dup 0 get /out exch def
+    /first true def
+    {
+        first {
+            pop
+            /first false def
+        } {
+            out j strconcat
+            exch strconcat
+            /out exch def
+        } ifelse
+    } forall
+    out
+    end
+} bind def
+
+
+% end included library code
+
+/columns 0 def
+/state 0 def
+
+[
+    (input) readlines {
+        state 0 eq {
+            dup (1) search {
+                pop pop pop
+                ( ) strsplit dup length 1 sub get cvi /columns exch def
+            ] /stacksrc exch def
+            /stacks [ columns { 0 array } repeat ] def
+            stacksrc length 1 sub -1 0 {
+                stacksrc exch get /line exch def
+                0 1 columns 1 sub {
+                    /i exch def
+                    line i 4 mul 1 add 1 getinterval safestring
+                    dup ( ) deepeq not {
+                        stacks i get exch apush.right stacks exch i exch put
+                    } {
+                        pop
+                    } ifelse
+                } for
+            } for
+            /state 1 def
+        } {
+            pop safestring
+        } ifelse
+    } {
+        dup (move) search {
+            pop pop pop
+            ( ) strsplit
+            dup dup 1 get cvi /ct exch def
+            3 get cvi 1 sub /src exch def
+            5 get cvi 1 sub /dst exch def
+            ct {
+                stacks src get apop.right exch stacks exch src exch put
+                stacks dst get exch apush.right stacks exch dst exch put
+            } repeat
+        } {
+            pop pop
+        } ifelse
+    } ifelse
+} forall
+
+[
+    stacks {
+        dup length 1 sub get
+    } forall
+]
+() strjoin ==

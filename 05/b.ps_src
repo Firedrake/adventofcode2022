@@ -1,0 +1,73 @@
+%!PS
+
+/reverse {
+    3 dict begin
+    /str exch def
+    str length 0 gt {
+        /temp str 0 get def
+        /i 0 def
+        str length 2 idiv {
+            /temp str i get def
+            str i str str length i sub 1 sub get put
+            str str length i sub 1 sub temp put
+            /i i 1 add def
+        } repeat
+    } if
+    str
+    end
+} bind def
+
+/columns 0 def
+/state 0 def
+
+[
+    (input) readlines {
+        state 0 eq {
+            dup (1) search {
+                pop pop pop
+                ( ) strsplit dup length 1 sub get cvi /columns exch def
+            ] /stacksrc exch def
+            /stacks [ columns { 0 array } repeat ] def
+            stacksrc length 1 sub -1 0 {
+                stacksrc exch get /line exch def
+                0 1 columns 1 sub {
+                    /i exch def
+                    line i 4 mul 1 add 1 getinterval safestring
+                    dup ( ) deepeq not {
+                        stacks i get exch apush.right stacks exch i exch put
+                    } {
+                        pop
+                    } ifelse
+                } for
+            } for
+            /state 1 def
+        } {
+            pop safestring
+        } ifelse
+    } {
+        dup (move) search {
+            pop pop pop
+            ( ) strsplit
+            dup dup 1 get cvi /ct exch def
+            3 get cvi 1 sub /src exch def
+            5 get cvi 1 sub /dst exch def
+            [
+                ct {
+                    stacks src get apop.right exch stacks exch src exch put
+                } repeat
+            ] reverse {
+                stacks dst get exch apush.right stacks exch dst exch put
+ 
+            } forall
+        } {
+            pop pop
+        } ifelse
+    } ifelse
+} forall
+
+[
+    stacks {
+        dup length 1 sub get
+    } forall
+]
+() strjoin ==
