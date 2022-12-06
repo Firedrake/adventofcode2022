@@ -1,0 +1,28 @@
+%!PS
+
+/tl 14 def
+
+(input) readlines {
+    /line exch def
+    tl 1 sub 1 line length 1 sub {
+        /i exch def
+        /valid true def
+        0 1 tl 2 sub {
+            /a exch def
+            a 1 add 1 tl 1 sub {
+                /b exch def
+                line i a sub get line i b sub get eq {
+                    /valid false def
+                    exit
+                } if
+            } for
+            valid not {
+                exit
+            } if
+        } for
+        valid {
+            i 1 add ==
+            exit
+        } if
+    } for
+} forall
