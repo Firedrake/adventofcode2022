@@ -1,0 +1,330 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/apop.right { % [a b c] -> [a b] c
+    [ exch aload length 1 add 1 roll ] exch
+} bind def
+
+/deepeq {
+    2 dict begin
+    /a exch def
+    /b exch def
+    a type b type eq {
+        a type /dicttype eq {
+            a length b length eq {
+                <<
+                    a {
+                        pop
+                        true
+                    } forall
+                    b {
+                        pop
+                        true
+                    } forall
+                >>
+                true exch
+                {
+                    pop
+                    dup a exch known {
+                        dup b exch known {
+                            dup a exch get exch b exch get deepeq not {
+                                pop false
+                            } if
+                        } {
+                            false
+                        } ifelse
+                    } {
+                        false
+                    } ifelse
+                } forall
+            } {
+                false
+            } ifelse
+        } {
+            a type dup /arraytype eq exch /stringtype eq or {
+                a length b length eq {
+                    true
+                    0 1 a length 1 sub {
+                        dup a exch get exch b exch get deepeq not {
+                            pop false
+                            exit
+                        } if
+                    } for
+                } {
+                    false
+                } ifelse
+            } {
+                a b eq
+            } ifelse
+        } ifelse
+    } {
+        false
+    } ifelse
+    end
+} bind def
+
+/values { % dict -> array of dict values
+    [ exch
+      {
+          exch pop
+      } forall
+    ]
+} bind def
+
+/reverse {
+    1 dict begin
+    dup length /l exch def
+    [ exch
+      aload pop
+      2 1 l {
+          -1 roll
+      } for
+    ]
+    end
+} bind def
+
+/strjoin % [(a) (b) (c)] (j) -> (ajbjc)
+{
+    3 dict begin
+    /j exch def
+    dup 0 get /out exch def
+    /first true def
+    {
+        first {
+            pop
+            /first false def
+        } {
+            out j strconcat
+            exch strconcat
+            /out exch def
+        } ifelse
+    } forall
+    out
+    end
+} bind def
+
+/keys { % dict -> array of dict keys
+    [ exch
+      {
+          pop
+      } forall
+    ]
+} bind def
+
+/quicksort.swap {
+    2 dict begin
+    /bi exch def
+    /ai exch def
+    arr ai get
+    arr bi get
+    arr exch ai exch put
+    arr exch bi exch put
+    end
+} bind def
+
+/strconcat % (a) (b) -> (ab)  
+{ exch dup length
+  2 index length add string
+  dup dup 4 2 roll copy length
+  4 -1 roll putinterval
+} bind def
+
+/safestring {
+    dup length string cvs
+} bind def
+
+/apush.right { % [a b] c -> [a b c]
+    exch
+    [ exch aload length 2 add -1 roll ]
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+    end
+} bind def
+
+/map { % array proc -> array
+    2 dict begin
+    /p exch def
+    [ exch
+      {
+          p
+      } forall
+    ]
+} bind def
+
+/quicksort { % [ a c b ] -> [ a b c ]
+    1 dict begin
+    /arr exch def
+    arr length 0 gt {
+        0 arr length 1 sub quicksort.main
+    } if
+    arr
+    end
+} bind def
+
+/quicksort.partition {
+    3 dict begin
+    /pivot arr hi lo add 2 idiv get def
+    /i lo 1 sub def
+    /j hi 1 add def
+    {
+        {
+            /i i 1 add def
+            arr i get pivot ge {
+                exit
+            } if
+        } loop
+        {
+            /j j 1 sub def
+            arr j get pivot le {
+                exit
+            } if
+        } loop
+        i j ge {
+            j
+            exit
+        } if
+        i j quicksort.swap
+    } loop
+    end
+} bind def
+
+/quicksort.main { % lo hi -> (null)
+    3 dict begin
+    /hi exch def
+    /lo exch def
+    /xit false def
+    lo 0 lt {
+        /xit true def
+    } if
+    hi 0 lt {
+        /xit true def
+    } if
+    lo hi ge {
+        /xit true def
+    } if
+    xit not {
+        /p quicksort.partition def
+        lo p quicksort.main
+        p 1 add hi quicksort.main
+    } if
+    end
+} bind def
+
+/strsplit % (ajbjc) (j) -> [ (a) (b) (c) ]
+{
+    1 dict begin
+    /sep exch def
+    [ exch
+      {
+          dup length 0 eq {
+              pop
+              exit
+          } {
+              sep search {
+                  exch pop
+                  dup length 0 eq {
+                      pop
+                  } {
+                      exch
+                  } ifelse
+              } {
+                  ()
+              } ifelse
+          } ifelse
+      } loop
+    ]
+    end
+} bind def
+
+/filter { % array proc(bool) -> array
+    1 dict begin
+    /p exch def
+    [ exch
+      {
+          dup p not
+          {
+              pop
+          } if
+      } forall
+    ]
+    end
+} bind def
+
+
+% end included library code
+
+/cwd 0 array def
+/cwds 0 string def
+/indir 0 dict def
+
+(input) readlines {
+    ( ) strsplit
+    /line exch def
+    line 0 get ($) deepeq {
+        line 1 get (cd) deepeq {
+            1 {
+                line 2 get (/) deepeq {
+                    /cwd 0 array def
+                    exit
+                } if
+                line 2 get (..) deepeq {
+                    /cwd cwd apop.right pop def
+                    exit
+                } if
+                /cwd cwd line 2 get safestring apush.right def
+            } repeat
+            cwd length 0 eq {
+                /cwds () def
+            } {
+                /cwds cwd (/) strjoin def
+            } ifelse
+        } if
+        line 1 get (ls) deepeq {
+            indir cwds 0 put
+        } if
+    } if
+    line 0 get 0 get dup 48 ge exch 57 le and {
+        line 0 get cvi indir cwds get add indir exch cwds exch put
+    } if
+} forall
+
+/i 0 def
+/lm << indir keys { dup length 100 mul i add /i i 1 add def exch } map aload pop >> def
+
+/lk lm keys quicksort reverse { lm exch get } map def
+
+lk {
+    /lower exch dup length string cvs def
+    lk {
+        /upper exch dup length string cvs def
+        lower upper deepeq not {
+            lower upper anchorsearch {
+                pop pop
+                indir lower get indir upper get add indir exch upper exch put
+                exit
+            } {
+                pop
+            } ifelse
+        } if
+    } forall
+} forall
+
+/spaceneeded 30000000 70000000 indir () get sub sub def
+
+indir values { spaceneeded ge } filter quicksort 0 get ==
