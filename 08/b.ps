@@ -1,0 +1,122 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/listmax {
+    { max } reduce
+} bind def
+
+/reduce { % array proc -> value
+    2 dict begin
+    /p exch def
+    /a exch def
+    a 0 get
+    1 1 a length 1 sub {
+        a exch get
+        p
+    } for
+    end
+} bind def
+
+/safestring {
+    dup length string cvs
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+    end
+} bind def
+
+
+% end included library code
+
+/heights [
+    (input) readlines {
+        [ exch
+          {
+              (.) dup 0 4 -1 roll put cvi
+          } forall
+        ]
+    } forall
+] def
+
+/ymax heights length 1 sub def
+/xmax heights 0 get length 1 sub def
+
+[
+    1 1 ymax 1 sub {
+        /y exch def
+        1 1 xmax 1 sub {
+            /x exch def
+            [
+                /th heights y get x get def
+
+                /i 0 def
+                x 1 add 1 xmax {
+                    /xi exch def
+                    /this heights y get xi get def
+                    this th ge {
+                        /i i 1 add def
+                        exit
+                    } {
+                        /i i 1 add def
+                    } ifelse
+                } for
+                i
+                
+                /i 0 def
+                x 1 sub -1 0 {
+                    /xi exch def
+                    /this heights y get xi get def
+                    this th ge {
+                        /i i 1 add def
+                        exit
+                    } {
+                        /i i 1 add def
+                    } ifelse
+                } for
+                i
+
+                /i 0 def
+                y 1 add 1 ymax {
+                    /yi exch def
+                    /this heights yi get x get def
+                    this th ge {
+                        /i i 1 add def
+                        exit
+                    } {
+                        /i i 1 add def
+                    } ifelse
+                } for
+                i
+
+                /i 0 def
+                y 1 sub -1 0 {
+                    /yi exch def
+                    /this heights yi get x get def
+                    this th ge {
+                        /i i 1 add def
+                        exit
+                    } {
+                        /i i 1 add def
+                    } ifelse
+                } for
+                i
+                
+            ] { mul } reduce
+        } for
+    } for
+] listmax ==

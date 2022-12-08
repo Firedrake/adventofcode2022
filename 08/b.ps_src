@@ -1,0 +1,79 @@
+%!PS
+
+/heights [
+    (input) readlines {
+        [ exch
+          {
+              (.) dup 0 4 -1 roll put cvi
+          } forall
+        ]
+    } forall
+] def
+
+/ymax heights length 1 sub def
+/xmax heights 0 get length 1 sub def
+
+[
+    1 1 ymax 1 sub {
+        /y exch def
+        1 1 xmax 1 sub {
+            /x exch def
+            [
+                /th heights y get x get def
+
+                /i 0 def
+                x 1 add 1 xmax {
+                    /xi exch def
+                    /this heights y get xi get def
+                    this th ge {
+                        /i i 1 add def
+                        exit
+                    } {
+                        /i i 1 add def
+                    } ifelse
+                } for
+                i
+                
+                /i 0 def
+                x 1 sub -1 0 {
+                    /xi exch def
+                    /this heights y get xi get def
+                    this th ge {
+                        /i i 1 add def
+                        exit
+                    } {
+                        /i i 1 add def
+                    } ifelse
+                } for
+                i
+
+                /i 0 def
+                y 1 add 1 ymax {
+                    /yi exch def
+                    /this heights yi get x get def
+                    this th ge {
+                        /i i 1 add def
+                        exit
+                    } {
+                        /i i 1 add def
+                    } ifelse
+                } for
+                i
+
+                /i 0 def
+                y 1 sub -1 0 {
+                    /yi exch def
+                    /this heights yi get x get def
+                    this th ge {
+                        /i i 1 add def
+                        exit
+                    } {
+                        /i i 1 add def
+                    } ifelse
+                } for
+                i
+                
+            ] { mul } reduce
+        } for
+    } for
+] listmax ==

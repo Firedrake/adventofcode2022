@@ -1,0 +1,107 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/safestring {
+    dup length string cvs
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+    end
+} bind def
+
+/keys { % dict -> array of dict keys
+    [ exch
+      {
+          pop
+      } forall
+    ]
+} bind def
+
+
+% end included library code
+
+/heights [
+    (input) readlines {
+        [ exch
+          {
+              (.) dup 0 4 -1 roll put cvi
+          } forall
+        ]
+    } forall
+] def
+
+/ymax heights length 1 sub def
+/xmax heights 0 get length 1 sub def
+
+/dimension xmax 1 add ymax 1 add max def
+
+/visibles 0 dict def
+
+0 1 ymax {
+    /y exch def
+    /mx -1 def
+    0 1 xmax {
+        /x exch def
+        /this heights y get x get def
+        this mx gt {
+            /mx this def
+            visibles y dimension mul x add true put
+        } if
+    } for
+} for
+
+0 1 ymax {
+    /y exch def
+    /mx -1 def
+    xmax -1 0 {
+        /x exch def
+        /this heights y get x get def
+        this mx gt {
+            /mx this def
+            visibles y dimension mul x add true put
+        } if
+    } for
+} for
+
+0 1 xmax {
+    /x exch def
+    /mx -1 def
+    0 1 ymax {
+        /y exch def
+        /this heights y get x get def
+        this mx gt {
+            /mx this def
+            visibles y dimension mul x add true put
+        } if
+    } for
+} for
+
+0 1 xmax {
+    /x exch def
+    /mx -1 def
+    ymax -1 0 {
+        /y exch def
+        /this heights y get x get def
+        this mx gt {
+            /mx this def
+            visibles y dimension mul x add true put
+        } if
+    } for
+} for
+
+visibles keys length ==
