@@ -1,0 +1,63 @@
+%!PS
+
+/debug false def
+
+/sign {
+    dup 0 eq {
+        pop 0
+    } {
+        0 gt {
+            1
+        } {
+            -1
+        } ifelse
+    } ifelse
+} bind def
+
+/dirs <<
+          (U) [0 1]
+          (D) [0 -1]
+          (L) [-1 0]
+          (R) [1 0]
+      >> def
+
+/visited 0 dict def
+
+/dimension 100000 def
+
+/xh 0 def
+/yh 0 def
+/xt 0 def
+/yt 0 def
+
+(input) readlines {
+    debug { dup == } if
+    ( ) strsplit aload pop
+    /dist exch cvi def
+    dirs exch get /delta exch def
+    dist {
+        /xh xh delta 0 get add def
+        /yh yh delta 1 get add def
+        /xd xh xt sub def
+        /yd yh yt sub def
+        1 {
+            xd 0 eq yd abs 2 ge and {
+                /yt yt yd sign add def
+                exit
+            } if
+            yd 0 eq xd abs 2 ge and {
+                /xt xt xd sign add def
+                exit
+            } if
+            xd abs 2 ge yd abs 2 ge or {
+                /xt xt xd sign add def
+                /yt yt yd sign add def
+                exit
+            } if
+        } repeat
+        debug { [ xh yh xt yt ] == } if
+        visited xt dimension mul yt add true put
+    } repeat
+} forall
+
+visited length ==
