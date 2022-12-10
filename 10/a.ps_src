@@ -1,0 +1,27 @@
+%!PS
+
+/x 1 def
+
+/xtrack
+[ x
+  (input) readlines {
+      ( ) strsplit /cmd exch def
+      1 {
+          cmd 0 get (noop) deepeq {
+              x
+              exit
+          } if
+          cmd 0 get (addx) deepeq {
+              x
+              x
+              /x x cmd 1 get cvi add def
+              exit
+          } if
+      } repeat
+  } forall
+  x
+] def
+
+[ 20 40 220 { } for ] {
+    dup xtrack exch get mul
+} map { add } reduce ==
