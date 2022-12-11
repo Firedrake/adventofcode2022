@@ -1,0 +1,94 @@
+%!PS
+
+/monkeys [
+    (input) readlines {
+        ( ) strsplit /line exch def
+        1 {
+            line length 0 eq {
+                exit
+            } if
+            line 0 get (Monkey) deepeq {
+                << (handled) 0 >>
+                exit
+            } if
+            line 0 get (Starting) deepeq {
+                [
+                    2 1 line length 1 sub {
+                        line exch get
+                        (,) search {
+                            3 1 roll pop pop
+                        } if
+                        cvi
+                    } for
+                ]
+                exch dup 3 -1 roll (stack) exch put
+                exit
+            } if
+            line 0 get (Operation:) deepeq {
+                /operator (+) def
+                /operand 0 def
+                line 5 get (old) deepeq {
+                    /operator (^) def
+                } {
+                    /operator line 4 get def
+                    /operand line 5 get cvi def
+                } ifelse
+                dup (operator) operator put
+                dup (operand) operand put
+                exit
+            } if
+            line 0 get (Test:) deepeq {
+                dup (test) line 3 get cvi put
+                exit
+            } if
+            line 0 get (If) deepeq {
+                line 1 get (true:) deepeq {
+                    dup (true) line 5 get cvi put
+                } {
+                    dup (false) line 5 get cvi put
+                } ifelse
+            } if
+            exit
+            exit
+        } repeat
+    } forall
+] def
+
+20 {
+    0 1 monkeys length 1 sub {
+        monkeys exch get /monkey exch def
+        monkey (stack) get {
+            monkey (handled) monkey (handled) get 1 add put
+            /worry exch def
+            1 {
+                monkey (operator) get (+) deepeq {
+                    /worry worry monkey (operand) get add def
+                    exit
+                } if
+                monkey (operator) get (*) deepeq {
+                    /worry worry monkey (operand) get mul def
+                    exit
+                } if
+                monkey (operator) get (^) deepeq {
+                    /worry worry worry mul def
+                    exit
+                } if
+            } repeat
+            /worry worry 3 idiv def
+            /target
+            worry monkey (test) get mod 0 eq {
+                monkey (true) get
+            } {
+                monkey (false) get
+            } ifelse
+            def
+            monkeys target get (stack)
+            monkeys target get (stack) get worry apush.right
+            put
+        } forall
+        monkey (stack) 0 array put
+    } for
+} repeat
+
+monkeys { (handled) get } map dup ==
+quicksort reverse dup 0 get exch 1 get mul ==

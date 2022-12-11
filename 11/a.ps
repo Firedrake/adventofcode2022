@@ -1,0 +1,302 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/quicksort.swap {
+    2 dict begin
+    /bi exch def
+    /ai exch def
+    arr ai get
+    arr bi get
+    arr exch ai exch put
+    arr exch bi exch put
+    end
+} bind def
+
+/deepeq {
+    2 dict begin
+    /a exch def
+    /b exch def
+    a type b type eq {
+        a type /dicttype eq {
+            a length b length eq {
+                <<
+                    a {
+                        pop
+                        true
+                    } forall
+                    b {
+                        pop
+                        true
+                    } forall
+                >>
+                true exch
+                {
+                    pop
+                    dup a exch known {
+                        dup b exch known {
+                            dup a exch get exch b exch get deepeq not {
+                                pop false
+                            } if
+                        } {
+                            false
+                        } ifelse
+                    } {
+                        false
+                    } ifelse
+                } forall
+            } {
+                false
+            } ifelse
+        } {
+            a type dup /arraytype eq exch /stringtype eq or {
+                a length b length eq {
+                    true
+                    0 1 a length 1 sub {
+                        dup a exch get exch b exch get deepeq not {
+                            pop false
+                            exit
+                        } if
+                    } for
+                } {
+                    false
+                } ifelse
+            } {
+                a b eq
+            } ifelse
+        } ifelse
+    } {
+        false
+    } ifelse
+    end
+} bind def
+
+/map { % array proc -> array
+    2 dict begin
+    /p exch def
+    [ exch
+      {
+          p
+      } forall
+    ]
+} bind def
+
+/quicksort.partition {
+    3 dict begin
+    /pivot arr hi lo add 2 idiv get def
+    /i lo 1 sub def
+    /j hi 1 add def
+    {
+        {
+            /i i 1 add def
+            arr i get pivot ge {
+                exit
+            } if
+        } loop
+        {
+            /j j 1 sub def
+            arr j get pivot le {
+                exit
+            } if
+        } loop
+        i j ge {
+            j
+            exit
+        } if
+        i j quicksort.swap
+    } loop
+    end
+} bind def
+
+/safestring {
+    dup length string cvs
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+    end
+} bind def
+
+/reverse {
+    1 dict begin
+    dup length /l exch def
+    [ exch
+      aload pop
+      2 1 l {
+          -1 roll
+      } for
+    ]
+    end
+} bind def
+
+/quicksort.main { % lo hi -> (null)
+    3 dict begin
+    /hi exch def
+    /lo exch def
+    /xit false def
+    lo 0 lt {
+        /xit true def
+    } if
+    hi 0 lt {
+        /xit true def
+    } if
+    lo hi ge {
+        /xit true def
+    } if
+    xit not {
+        /p quicksort.partition def
+        lo p quicksort.main
+        p 1 add hi quicksort.main
+    } if
+    end
+} bind def
+
+/strsplit % (ajbjc) (j) -> [ (a) (b) (c) ]
+{
+    1 dict begin
+    /sep exch def
+    [ exch
+      {
+          dup length 0 eq {
+              pop
+              exit
+          } {
+              sep search {
+                  exch pop
+                  dup length 0 eq {
+                      pop
+                  } {
+                      exch
+                  } ifelse
+              } {
+                  ()
+              } ifelse
+          } ifelse
+      } loop
+    ]
+    end
+} bind def
+
+/apush.right { % [a b] c -> [a b c]
+    exch
+    [ exch aload length 2 add -1 roll ]
+} bind def
+
+/quicksort { % [ a c b ] -> [ a b c ]
+    1 dict begin
+    /arr exch def
+    arr length 0 gt {
+        0 arr length 1 sub quicksort.main
+    } if
+    arr
+    end
+} bind def
+
+
+% end included library code
+
+/monkeys [
+    (input) readlines {
+        ( ) strsplit /line exch def
+        1 {
+            line length 0 eq {
+                exit
+            } if
+            line 0 get (Monkey) deepeq {
+                << (handled) 0 >>
+                exit
+            } if
+            line 0 get (Starting) deepeq {
+                [
+                    2 1 line length 1 sub {
+                        line exch get
+                        (,) search {
+                            3 1 roll pop pop
+                        } if
+                        cvi
+                    } for
+                ]
+                exch dup 3 -1 roll (stack) exch put
+                exit
+            } if
+            line 0 get (Operation:) deepeq {
+                /operator (+) def
+                /operand 0 def
+                line 5 get (old) deepeq {
+                    /operator (^) def
+                } {
+                    /operator line 4 get def
+                    /operand line 5 get cvi def
+                } ifelse
+                dup (operator) operator put
+                dup (operand) operand put
+                exit
+            } if
+            line 0 get (Test:) deepeq {
+                dup (test) line 3 get cvi put
+                exit
+            } if
+            line 0 get (If) deepeq {
+                line 1 get (true:) deepeq {
+                    dup (true) line 5 get cvi put
+                } {
+                    dup (false) line 5 get cvi put
+                } ifelse
+            } if
+            exit
+            exit
+        } repeat
+    } forall
+] def
+
+20 {
+    0 1 monkeys length 1 sub {
+        monkeys exch get /monkey exch def
+        monkey (stack) get {
+            monkey (handled) monkey (handled) get 1 add put
+            /worry exch def
+            1 {
+                monkey (operator) get (+) deepeq {
+                    /worry worry monkey (operand) get add def
+                    exit
+                } if
+                monkey (operator) get (*) deepeq {
+                    /worry worry monkey (operand) get mul def
+                    exit
+                } if
+                monkey (operator) get (^) deepeq {
+                    /worry worry worry mul def
+                    exit
+                } if
+            } repeat
+            /worry worry 3 idiv def
+            /target
+            worry monkey (test) get mod 0 eq {
+                monkey (true) get
+            } {
+                monkey (false) get
+            } ifelse
+            def
+            monkeys target get (stack)
+            monkeys target get (stack) get worry apush.right
+            put
+        } forall
+        monkey (stack) 0 array put
+    } for
+} repeat
+
+monkeys { (handled) get } map dup ==
+quicksort reverse dup 0 get exch 1 get mul ==
