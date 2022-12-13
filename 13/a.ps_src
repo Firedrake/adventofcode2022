@@ -1,0 +1,98 @@
+%!PS
+
+/debug false def
+
+/compare {
+    4 dict begin
+    /b exch def
+    /a exch def
+    debug {
+        ({) = a == b ==
+    } if
+    1 {
+        a type /integertype eq b type /integertype eq and {
+            a b lt {
+                1
+            } {
+                a b gt {
+                    -1
+                } {
+                    0
+                } ifelse
+            } ifelse
+            exit
+        } if
+        a type /arraytype eq b type /arraytype eq and {
+            /x 0 def
+            0 1 a length b length min 1 sub {
+                /i exch def
+                a i get b i get compare
+                /x exch def
+                x 0 ne {
+                    exit
+                } if
+            } for
+            x 0 eq {
+                b length a length sub dup 0 gt {
+                    pop 1
+                } {
+                    0 lt {
+                        -1
+                    } {
+                        0
+                    } ifelse
+                } ifelse
+            } {
+                x
+            } ifelse
+            exit
+        } if
+        a type /arraytype eq {
+            a [ b ] compare
+        } {
+            [ a ] b compare
+        } ifelse
+    } repeat
+    debug {
+        dup == (}) =
+    } if
+    end
+} bind def
+
+/i 0 def
+/a 0 def
+/b 0 def
+
+/counter 1 def
+/total 0 def
+
+(input) readlines {
+    dup length 0 eq {
+        /i 0 def
+    } {
+        (,) strsplit ( ) strjoin
+        [ exch ({) exch (}) ] ( ) strjoin
+        [ exch
+          {
+              token {
+                  exch
+              } {
+                  exit
+              } ifelse
+          } loop
+        ]
+        i 0 eq {
+            /a
+        } {
+            /b
+        } ifelse exch def
+        /i i 1 add def
+        i 2 eq {
+            a b compare 1 eq {
+                /total total counter add def
+            } if
+            /counter counter 1 add def
+        } if
+    } ifelse
+} forall
+total =

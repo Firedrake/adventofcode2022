@@ -1,0 +1,257 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/strjoin % [(a) (b) (c)] (j) -> (ajbjc)
+{
+    3 dict begin
+    /j exch def
+    dup 0 get /out exch def
+    /first true def
+    {
+        first {
+            pop
+            /first false def
+        } {
+            out j strconcat
+            exch strconcat
+            /out exch def
+        } ifelse
+    } forall
+    out
+    end
+} bind def
+
+/strconcat % (a) (b) -> (ab)  
+{ exch dup length
+  2 index length add string
+  dup dup 4 2 roll copy length
+  4 -1 roll putinterval
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+    end
+} bind def
+
+/safestring {
+    dup length string cvs
+} bind def
+
+/strsplit % (ajbjc) (j) -> [ (a) (b) (c) ]
+{
+    1 dict begin
+    /sep exch def
+    [ exch
+      {
+          dup length 0 eq {
+              pop
+              exit
+          } {
+              sep search {
+                  exch pop
+                  dup length 0 eq {
+                      pop
+                  } {
+                      exch
+                  } ifelse
+              } {
+                  ()
+              } ifelse
+          } ifelse
+      } loop
+    ]
+    end
+} bind def
+
+
+% end included library code
+
+/debug false def
+
+/fquicksort { % [ a c b ] -> [ a b c ]
+    1 dict begin
+    /arr exch def
+    arr length 0 gt {
+        0 arr length 1 sub fquicksort.main
+    } if
+    arr
+    end
+} bind def
+
+/fquicksort.main { % lo hi -> (null)
+    3 dict begin
+    /hi exch def
+    /lo exch def
+    /xit false def
+    lo 0 lt {
+        /xit true def
+    } if
+    hi 0 lt {
+        /xit true def
+    } if
+    lo hi ge {
+        /xit true def
+    } if
+    xit not {
+        /p fquicksort.partition def
+        lo p fquicksort.main
+        p 1 add hi fquicksort.main
+    } if
+    end
+} bind def
+
+/fquicksort.partition {
+    3 dict begin
+    /pivot arr hi lo add 2 idiv get def
+    /i lo 1 sub def
+    /j hi 1 add def
+    {
+        {
+            /i i 1 add def
+            comps arr i get get pivot get 1 ne {
+                exit
+            } if
+        } loop
+        {
+            /j j 1 sub def
+            comps arr j get get pivot get -1 ne {
+                exit
+            } if
+        } loop
+        i j ge {
+            j
+            exit
+        } if
+        i j fquicksort.swap
+    } loop
+    end
+} bind def
+
+/fquicksort.swap {
+    2 dict begin
+    /bi exch def
+    /ai exch def
+    arr ai get
+    arr bi get
+    arr exch ai exch put
+    arr exch bi exch put
+    end
+} bind def
+
+/compare {
+    4 dict begin
+    /b exch def
+    /a exch def
+    debug {
+        ({) = a == b ==
+    } if
+    1 {
+        a type /integertype eq b type /integertype eq and {
+            a b lt {
+                1
+            } {
+                a b gt {
+                    -1
+                } {
+                    0
+                } ifelse
+            } ifelse
+            exit
+        } if
+        a type /arraytype eq b type /arraytype eq and {
+            /x 0 def
+            0 1 a length b length min 1 sub {
+                /i exch def
+                a i get b i get compare
+                /x exch def
+                x 0 ne {
+                    exit
+                } if
+            } for
+            x 0 eq {
+                b length a length sub dup 0 gt {
+                    pop 1
+                } {
+                    0 lt {
+                        -1
+                    } {
+                        0
+                    } ifelse
+                } ifelse
+            } {
+                x
+            } ifelse
+            exit
+        } if
+        a type /arraytype eq {
+            a [ b ] compare
+        } {
+            [ a ] b compare
+        } ifelse
+    } repeat
+    debug {
+        dup == (}) =
+    } if
+    end
+} bind def
+
+/a 0 def
+/b 0 def
+
+/packets [
+    [ ([[2]]) ([[6]]) (input) readlines aload pop ] {
+        dup ([) anchorsearch {
+            pop pop
+            (,) strsplit ( ) strjoin
+            [ exch ({) exch (}) ] ( ) strjoin
+            [ exch
+              {
+                  token {
+                      exch
+                  } {
+                      exit
+                  } ifelse
+              } loop
+            ] exec
+        } {
+            pop pop
+        } ifelse
+    } forall
+] def
+
+/comps [ packets length { [ packets length { 0 } repeat ] } repeat ] def
+
+0 1 packets length 2 sub {
+    /x exch def
+    x 1 add 1 packets length 1 sub {
+        /y exch def
+        /r packets x get packets y get compare def
+        comps x comps x get dup y r put put
+        comps y comps y get dup x r neg put put
+    } for
+} for
+
+/sorted [ 0 1 packets length 1 sub { } for ] fquicksort def
+
+/m 1 def
+0 1 sorted length 1 sub {
+    /i exch def
+    sorted i get dup 0 eq exch 1 eq or {
+        /m m i 1 add mul def
+    } if
+} for
+m =
