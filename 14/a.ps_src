@@ -1,0 +1,89 @@
+%!PS
+
+/dimension 1000 def
+
+/sign {
+    dup 0 eq {
+        pop 0
+    } {
+        0 gt {
+            1
+        } {
+            -1
+        } ifelse
+    } ifelse
+} bind def
+
+/encode {
+    dimension mul add
+} bind def
+
+/state 0 dict def
+
+(input) readlines {
+    [ exch
+      ( ) strsplit {
+          (,) search {
+              cvi exch pop exch cvi 2 array astore
+          } {
+              pop
+          } ifelse
+      } forall
+    ]
+    /l exch def
+    0 1 l length 2 sub {
+        /i exch def
+        /a l i get def
+        /b l i 1 add get def
+        a 0 get b 0 get eq {
+            a 1 get a 1 get b 1 get sub neg sign b 1 get {
+                a 0 get exch encode state exch true put
+            } for
+        } {
+            a 0 get a 0 get b 0 get sub neg sign b 0 get {
+                a 1 get encode state exch true put
+            } for
+        } ifelse
+    } for
+} forall
+
+/bottom state keys listmax def
+
+/exhaust false def
+/rest 0 def
+{
+    /pos 500 0 encode def
+    /resting false def
+    {
+        /pos pos dimension add def
+        pos bottom gt {
+            /exhaust true def
+            exit
+        } if
+        1 {
+            state pos known not {
+                exit
+            } if
+            /pos pos 1 sub def
+            state pos known not {
+                exit
+            } if
+            /pos pos 2 add def
+            state pos known not {
+                exit
+            } if
+            /pos pos 1 sub dimension sub def
+            state pos true put
+            /rest rest 1 add def
+            /resting true def
+        } repeat
+        resting {
+            exit
+        } if
+    } loop
+    exhaust {
+        exit
+    } if
+} loop
+
+rest ==
