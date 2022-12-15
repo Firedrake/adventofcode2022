@@ -1,0 +1,111 @@
+%!PS
+
+/minus (-) 0 get def
+/zero (0) 0 get def
+/nine (9) 0 get def
+
+/encode {
+    dimension mul add
+} bind def
+
+/manhattandistance {
+    3 -1 roll sub abs
+    3 1 roll sub abs
+    add
+} bind def
+
+/y 2000000 def
+
+/input [
+    (input) readlines {
+        /line exch def
+        /i 0 def
+        /start 0 def
+        /end 0 def
+        /number -1 def
+        /innumber false def
+        [
+            line {
+                dup minus eq exch dup zero ge exch nine le and or {
+                    innumber not {
+                        /start i def
+                        /innumber true def
+                    } if
+                    /end i def
+                } {
+                    innumber {
+                        line start end start sub 1 add getinterval cvi
+                        /innumber false def
+                    } if
+                } ifelse
+                /i i 1 add def
+            } forall
+            innumber {
+                line start end start sub 1 add getinterval cvi
+            } if
+            4 copy manhattandistance
+        ]
+    } forall
+] def
+
+/dimension
+[
+    1 2 3 {
+        /i exch def
+        input { i get } map aload pop
+    } for
+]
+dup listmax exch listmin sub 1 add def
+
+/ranges
+[
+    input {
+        /target exch def
+        target 4 get target 1 get y sub abs sub
+        dup 0 ge {
+            [ exch dup neg target 0 get add exch target 0 get add ]
+        } {
+            pop
+        } ifelse
+    } forall
+] def
+
+/xscan [
+    ranges { 0 get } map listmin ranges { 1 get } map listmax
+] def
+
+/beacons [
+    input {
+        dup 3 get exch 2 get exch
+        encode
+    } forall
+] toset def
+
+/total 0 def
+
+xscan 0 get 1 xscan 1 get {
+    /x exch def
+    /inrange false def
+    ranges {
+        /r exch def
+        x r 0 get ge x r 1 get le and {
+            /inrange true def
+            exit
+        } if
+    } forall
+    inrange {
+        beacons x y encode known not {
+            /possible true def
+            input {
+                /target exch def
+                x y target 0 get target 1 get manhattandistance target 4 get le {
+                    /possible false def
+                } if
+            } forall
+            possible not {
+                /total total 1 add def
+            } if
+        } if
+    } if
+} for
+total =
