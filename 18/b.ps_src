@@ -1,0 +1,81 @@
+%!PS
+
+/cubes [
+    (input) readlines {
+        (,) strsplit { cvi } map
+    } forall
+] def
+
+/dimension 3 array def
+
+0 1 1 {
+    /axis exch def
+    dimension axis cubes { axis 1 add get } map dup listmax exch listmin sub 4 add put
+} for
+dimension 2 1 put
+dimension 0 dimension 0 get dimension 1 get mul put
+
+/hash 0 dict def
+
+/encode {
+    2 dict begin
+    /c exch def
+    0
+    0 1 2 {
+        /axis exch def
+        c axis get dimension axis get mul add
+    } for
+    end
+} bind def
+
+cubes {
+    encode hash exch true put
+} forall
+
+/bounds [
+    0 1 2 {
+        /axis exch def
+        [ cubes { axis get } map dup listmin 1 sub exch listmax 1 add ]
+    } for
+] def
+
+/stack [ bounds { 0 get } map ] def
+
+hash stack 0 get encode known {
+    (Warning: change start corner) ==
+} if
+
+/area 0 def
+
+/visited 0 dict def
+
+{
+    stack length 0 eq {
+        exit
+    } if
+    stack apop.right /this exch def /stack exch def
+    [
+        0 1 2 {
+            /axis exch def
+            -1 2 1 {
+                /delta exch def
+                /test [ this aload pop ] def
+                /tv test axis get delta add def
+                tv bounds axis get 0 get ge tv bounds axis get 1 get le and {
+                    test axis tv put
+                    /n test encode def
+                    hash n known {
+                        /area area 1 add def
+                    } {
+                        visited n known not {
+                            visited n true put
+                            /stack stack test apush.right def
+                        } if
+                    } ifelse
+                } if
+            } for
+        } for
+    ]
+} loop
+
+area ==
