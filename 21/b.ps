@@ -1,0 +1,148 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+    end
+} bind def
+
+/strsplit % (ajbjc) (j) -> [ (a) (b) (c) ]
+{
+    1 dict begin
+    /sep exch def
+    [ exch
+      {
+          dup length 0 eq {
+              pop
+              exit
+          } {
+              sep search {
+                  exch pop
+                  dup length 0 eq {
+                      pop
+                  } {
+                      exch
+                  } ifelse
+              } {
+                  ()
+              } ifelse
+          } ifelse
+      } loop
+    ]
+    end
+} bind def
+
+/safestring {
+    dup length string cvs
+} bind def
+
+
+% end included library code
+
+/optree <<
+            (input) readlines {
+                (:) strsplit aload pop
+                ( ) strsplit
+            } forall
+        >> def
+
+optree (root) get 1 (-) put
+
+/dump {
+    optree {
+        exch (....) cvs print (: ) print ==
+    } forall
+} bind def
+
+/codeadd (+) 0 get def
+/codesub (-) 0 get def
+/codemul (*) 0 get def
+/codediv (/) 0 get def
+
+/resolve {
+    2 dict begin
+    /twig exch optree exch get def
+    twig length 1 eq {
+        twig 0 get cvi
+    } {
+        twig 0 get resolve
+        twig 2 get resolve
+        1 {
+            /codeop twig 1 get 0 get def
+            codeop codeadd eq {
+                add
+                exit
+            } if
+            codeop codesub eq {
+                sub
+                exit
+            } if
+            codeop codemul eq {
+                mul
+                exit
+            } if
+            codeop codediv eq {
+                idiv
+                exit
+            } if
+        } repeat
+    } ifelse
+    end
+} bind def
+
+/metaresolve {
+    optree exch (humn) exch [ exch 50 string cvs ] put (root) resolve
+} bind def
+
+/li -1 def /lo li metaresolve def
+/hi 1 def /ho hi metaresolve def
+{
+    ho 0 eq {
+        /ans hi def exit
+    } if
+    lo 0 eq {
+        /ans li def exit
+    } if
+    lo ho mul 0 lt {
+        /mi li hi add 2 idiv def
+        lo abs ho abs gt {
+            /li mi def
+            /lo li metaresolve def
+        } {
+            /hi mi def
+            /ho hi metaresolve def
+        } ifelse
+    } {
+        /delta hi li sub 10 mul def
+        /li li delta sub def
+        /lo li metaresolve def
+        /hi hi delta add def
+        /ho hi metaresolve def
+    } ifelse
+} loop
+
+{
+    /ans ans 1 sub def
+    ans metaresolve 0 ne {
+        /ans ans 1 add def
+        exit
+    } if
+} loop
+
+ans =
+
+
