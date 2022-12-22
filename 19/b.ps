@@ -1,0 +1,206 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/apush.right { % [a b] c -> [a b c]
+    exch
+    [ exch aload length 2 add -1 roll ]
+} bind def
+
+/reduce { % array proc -> value
+    2 dict begin
+    /p exch def
+    /a exch def
+    a 0 get
+    1 1 a length 1 sub {
+        a exch get
+        p
+    } for
+    end
+} bind def
+
+/map { % array proc -> array
+    2 dict begin
+    /p exch def
+    [ exch
+      {
+          p
+      } forall
+    ]
+    end
+} bind def
+
+/listmax {
+    { max } reduce
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+    end
+} bind def
+
+/safestring {
+    dup length string cvs
+} bind def
+
+/apop.right { % [a b c] -> [a b] c
+    [ exch aload length 1 add 1 roll ] exch
+} bind def
+
+/strsplit % (ajbjc) (j) -> [ (a) (b) (c) ]
+{
+    1 dict begin
+    /sep exch def
+    [ exch
+      {
+          dup length 0 eq {
+              pop
+              exit
+          } {
+              sep search {
+                  exch pop
+                  dup length 0 eq {
+                      pop
+                  } {
+                      exch
+                  } ifelse
+              } {
+                  ()
+              } ifelse
+          } ifelse
+      } loop
+    ]
+    end
+} bind def
+
+
+% end included library code
+
+/res <<
+            (ore) 0
+            (clay) 1
+            (obsidian) 2
+            (geode) 3
+        >> def
+
+/maxticks 32 def
+
+/totalscore 1 def
+[
+    (input) readlines
+    dup length 3 gt {
+        0 3 getinterval
+    } if
+    {
+        (:) strsplit dup 0 get ( ) strsplit 1 get cvi /idx exch def
+        /recipe [ res length { 0 } repeat ] def
+        1 get (.) strsplit {
+            ( ) strsplit /bill exch def
+            /costs [ res length 1 sub { 0 } repeat ] def
+            /ri res bill 1 get get def
+            4 3 bill length 2 sub {
+                /i exch def
+                costs
+                res bill i 1 add get get
+                bill i get cvi
+                put
+            } for
+            recipe ri costs put
+        } forall
+        [ idx recipe ]
+    } forall
+] {
+    /geode 0 def
+    dup 0 get /bpnumber exch def
+    1 get /recipe exch def
+    /maxres [
+        0 1 2 {
+            /i exch def
+            recipe { i get } map listmax
+        } for
+    ] def
+    % index 0-3 is robots, 4-7 is stuff, 8 is ticks to date
+    /stack [ [ 1 0 0 0 0 0 0 0 0 ] ] def
+    {
+        stack length 0 eq {
+            exit
+        } if
+        /stack stack apop.right /state exch def def
+        state 8 get maxticks ge {
+            /g state 7 get def
+            g geode gt {
+                /geode g def
+            } if
+        } {
+            /timeleft maxticks state 8 get sub def
+            % maximum possible geode production from here
+            % assuming we build a geode robot every tick
+            state 7 get % stock on hand
+            state 3 get timeleft mul add % production from existing robots
+            timeleft dup 1 add mul 2 idiv add % production from new robots
+            geode gt {
+                -1 1 3 {
+                    /ri exch def
+                    /nstate [ state aload pop ] def
+                    /possible true def
+                    -1 ri eq {
+                        /cycles timeleft def
+                    } {
+                        /cycles 1 def
+                        0 1 2 {
+                            /i exch def
+                            /i4 i 4 add def
+                            state i4 get recipe ri get i get lt {
+                                state i get 0 gt {
+                                    recipe ri get i get state i4 get sub 1 sub
+                                    state i get idiv 2 add cycles max /cycles exch def
+                                } {
+                                    /possible false def
+                                    exit
+                                } ifelse
+                            } if
+                        } for
+                        cycles timeleft gt {
+                            /possible false def
+                        } if
+                        possible {
+                            0 1 2 {
+                                /i exch def
+                                /i4 i 4 add def
+                                nstate i4 nstate i4 get recipe ri get i get sub put
+                            } for
+                        } if
+                    } ifelse
+                    possible {
+                        0 1 3 {
+                            /i exch def
+                            /i4 i 4 add def
+                            nstate i4 nstate i4 get nstate i get cycles mul add put
+                        } for
+                        ri -1 ne {
+                            nstate ri nstate ri get 1 add put
+                        } if
+                        nstate 8 nstate 8 get cycles add put
+                        /stack stack nstate apush.right def
+                    } if
+                } for
+            } if
+        } ifelse
+    } loop
+    bpnumber (..) cvs print ( ) print geode ==
+    /totalscore totalscore geode mul def
+} forall
+totalscore ==
