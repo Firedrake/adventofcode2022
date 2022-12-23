@@ -1,0 +1,192 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/safestring {
+    dup length string cvs
+} bind def
+
+/map { % array proc -> array
+    2 dict begin
+    /p exch def
+    [ exch
+      {
+          p
+      } forall
+    ]
+    end
+} bind def
+
+/listmax {
+    { max } reduce
+} bind def
+
+/listmin {
+    { min } reduce
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+    end
+} bind def
+
+/toset { % array -> dict of (value, true)
+    << exch
+       {
+           true
+       } forall
+    >>
+} bind def
+
+/reduce { % array proc -> value
+    2 dict begin
+    /p exch def
+    /a exch def
+    a 0 get
+    1 1 a length 1 sub {
+        a exch get
+        p
+    } for
+    end
+} bind def
+
+
+
+% end included library code
+
+/codehash (#) 0 get def
+
+/elf [
+    /y 0 def
+    (input) readlines {
+        /x 0 def
+        {
+            (#) search {
+                length x add /x exch def
+                pop
+                [ x y ] exch
+                /x x 1 add def
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+        /y y 1 add def
+    } forall
+] def
+
+/dirs [
+    [ 0 -1 ]
+    [ 0 1 ]
+    [ -1 0 ]
+    [ 1 0 ]
+] def
+
+elf { 0 get } map dup listmin exch listmax 2 array astore /xbound exch def
+% elf { 1 get } map dup listmin exch listmax 2 array astore /ybound exch def
+
+/xmul xbound aload pop exch sub 1000000 mul def
+
+/encode {
+    exch xmul mul add
+} bind def
+
+/round 0 def
+
+{
+    /elfhash elf { aload pop encode } map toset def
+    /proposal [
+        elf {
+            aload pop /y exch def /x exch def
+            /p false def
+            -1 1 1 {
+                /dx exch def
+                -1 1 1 {
+                    /dy exch def
+                    dx 0 ne dy 0 ne or {
+                        elfhash x dx add y dy add encode known {
+                            /p true def
+                            exit
+                        } if
+                    } if
+                } for
+                p {
+                    exit
+                } if
+            } for
+            p {
+                0 1 3 { % each candidate direction
+                    /p true def
+                    dirs exch get /testdir exch def
+                    [
+                        testdir 0 get 0 eq {
+                            /dy testdir 1 get def
+                            -1 1 1 {
+                                /dx exch def
+                                [ dx dy ]
+                            } for
+                        } {
+                            /dx testdir 0 get def
+                            -1 1 1 {
+                                /dy exch def
+                                [ dx dy ]
+                            } for
+                        } ifelse
+                    ] {
+                        aload pop y add exch x add exch encode elfhash exch known {
+                            /p false def
+                            exit
+                        } if
+                    } forall
+                    p {
+                        exit
+                    } if
+                } for
+            } if
+            p {
+                [ testdir aload pop y add exch x add exch ]
+            } {
+                [ xmul xmul ]
+            } ifelse
+        } forall
+        [ xmul xmul ]
+    ] def
+    /propenc proposal { aload pop encode } map def
+    /prophash 0 dict def
+    propenc {
+        /k exch def
+        prophash k known {
+            prophash k prophash k get 1 add put
+        } {
+            prophash k 1 put
+        } ifelse
+    } forall
+    /round round 1 add def
+    /nomove true def
+    0 1 elf length 1 sub {
+        /i exch def
+        prophash propenc i get get 1 le {
+            elf i proposal i get put
+            /nomove false def
+        } if
+    } for
+    nomove {
+        exit
+    } if
+    dirs aload pop 4 -1 roll 4 array astore /dirs exch def
+} loop
+
+round ==
