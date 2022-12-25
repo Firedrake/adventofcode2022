@@ -1,0 +1,121 @@
+%!PS
+
+% begin included library code
+% see https://github.com/Firedrake/postscript-libraries/
+/map { % array proc -> array
+    2 dict begin
+    /p exch def
+    [ exch
+      {
+          p
+      } forall
+    ]
+    end
+} bind def
+
+/reduce { % array proc -> value
+    2 dict begin
+    /p exch def
+    /a exch def
+    a 0 get
+    1 1 a length 1 sub {
+        a exch get
+        p
+    } for
+    end
+} bind def
+
+/safestring {
+    dup length string cvs
+} bind def
+
+/a2s {
+    2 dict begin
+    /i exch def
+    i length dup string /o exch def
+    1 sub 0 exch 1 exch {
+        dup i 3 -1 roll get o 3 1 roll put
+    } for
+    o
+    end
+} bind def
+
+/readlines {
+    2 dict begin
+    /fh exch (r) file def
+    /buf fh bytesavailable string def
+    [
+        {
+            fh buf readline {
+                safestring
+            } {
+                pop
+                exit
+            } ifelse
+        } loop
+    ]
+    fh closefile
+    end
+} bind def
+
+/reverse {
+    1 dict begin
+    dup length /l exch def
+    [ exch
+      aload pop
+      2 1 l {
+          -1 roll
+      } for
+    ]
+    end
+} bind def
+
+
+% end included library code
+
+/n2stab (=-012) def
+
+/n2s {
+    1 dict begin
+    /t exch def
+    [
+      {
+          t 5 mod
+          /t t 5 idiv def
+          dup 2 gt {
+              5 sub
+              /t t 1 add def
+          } if
+          t 0 eq {
+              exit
+          } if
+      } loop
+    ] reverse { n2stab exch 2 add get } map a2s
+    end
+} bind def
+
+/s2ntab <<
+            (=) 0 get -2
+            (-) 0 get -1
+            (0) 0 get 0
+            (1) 0 get 1
+            (2) 0 get 2
+        >> def
+
+/s2n {
+    0 exch
+    {
+        s2ntab exch get
+        exch 5 mul add
+    } forall
+} bind def
+
+[
+    (input) readlines {
+        s2n
+    } forall
+]
+
+{ add } reduce
+
+n2s =

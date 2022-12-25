@@ -1,0 +1,48 @@
+%!PS
+
+/n2stab (=-012) def
+
+/n2s {
+    1 dict begin
+    /t exch def
+    [
+      {
+          t 5 mod
+          /t t 5 idiv def
+          dup 2 gt {
+              5 sub
+              /t t 1 add def
+          } if
+          t 0 eq {
+              exit
+          } if
+      } loop
+    ] reverse { n2stab exch 2 add get } map a2s
+    end
+} bind def
+
+/s2ntab <<
+            (=) 0 get -2
+            (-) 0 get -1
+            (0) 0 get 0
+            (1) 0 get 1
+            (2) 0 get 2
+        >> def
+
+/s2n {
+    0 exch
+    {
+        s2ntab exch get
+        exch 5 mul add
+    } forall
+} bind def
+
+[
+    (input) readlines {
+        s2n
+    } forall
+]
+
+{ add } reduce
+
+n2s =
